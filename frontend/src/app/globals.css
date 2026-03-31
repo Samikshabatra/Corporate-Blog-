@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { @apply border-surface-border; }
+  html { @apply scroll-smooth; }
+  body { @apply bg-surface text-slate-900 dark:bg-dark dark:text-slate-100; }
+  :focus-visible { @apply outline-2 outline-offset-2 outline-brand-500; }
+  ::selection { @apply bg-brand-100 text-brand-900; }
+  ::-webkit-scrollbar { @apply w-2; }
+  ::-webkit-scrollbar-track { @apply bg-surface-subtle; }
+  ::-webkit-scrollbar-thumb { @apply rounded-full bg-slate-300 dark:bg-dark-subtle; }
+}
+
+@layer components {
+  .prose-blog {
+    @apply prose prose-slate max-w-content
+           prose-headings:font-serif prose-headings:font-bold
+           prose-a:text-brand-600 prose-a:no-underline hover:prose-a:underline
+           prose-code:rounded prose-code:bg-surface-subtle prose-code:px-1.5 prose-code:py-0.5
+           prose-pre:bg-dark prose-pre:text-slate-100
+           dark:prose-invert;
+  }
+  .card {
+    @apply rounded-xl border border-surface-border bg-surface p-6
+           shadow-card transition-shadow hover:shadow-card-md
+           dark:border-dark-border dark:bg-dark-muted;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium
+           transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary { @apply btn bg-brand-600 text-white hover:bg-brand-700 focus-visible:outline-brand-600; }
+  .btn-secondary { @apply btn border border-surface-border bg-surface text-slate-700 hover:bg-surface-subtle dark:border-dark-border dark:bg-dark-muted dark:text-slate-200 dark:hover:bg-dark-subtle; }
+  .btn-ghost { @apply btn text-slate-600 hover:bg-surface-subtle dark:text-slate-300 dark:hover:bg-dark-subtle; }
+  .btn-danger { @apply btn bg-red-600 text-white hover:bg-red-700 focus-visible:outline-red-600; }
+  .input {
+    @apply w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-slate-900
+           placeholder-slate-400 transition-colors focus:border-brand-500 focus:outline-none focus:ring-2
+           focus:ring-brand-500/20 dark:border-dark-border dark:bg-dark-muted dark:text-slate-100;
+  }
+  .label { @apply mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300; }
+  .badge { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium; }
+  .badge-draft { @apply badge bg-amber-100 text-amber-700; }
+  .badge-published { @apply badge bg-green-100 text-green-700; }
+  .badge-archived { @apply badge bg-slate-100 text-slate-600; }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  .animate-in { animation: fadeIn 0.3s ease-in-out; }
+  .container-blog { @apply mx-auto max-w-wide px-4 sm:px-6 lg:px-8; }
+  .container-content { @apply mx-auto max-w-content px-4; }
+}

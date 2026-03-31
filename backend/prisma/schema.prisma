@@ -1,0 +1,238 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+  WRITER
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ImageType {
+  COVER
+  INLINE
+  AVATAR
+}
+
+model User {
+  id           String    @id @default(uuid())
+  name         String
+  email        String    @unique
+  passwordHash String?
+  googleId     String?   @unique
+  slug         String    @unique
+  avatarUrl    String?
+  bio          String?
+  role         Role      @default(WRITER)
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  posts         Post[]
+  refreshTokens RefreshToken[]
+  images        Image[]
+  auditLogs     PublishAuditLog[]
+
+  @@index([email])
+  @@index([slug])
+  @@map("users")
+}
+
+model Post {
+  id             String     @id @default(uuid())
+  title          String
+  slug           String     @unique
+  excerpt        String?
+  content        String
+  status         PostStatus @default(DRAFT)
+  isSponsored    Boolean    @default(false)
+  metaTitle      String?
+  metaDesc       String?
+  canonicalUrl   String?
+  ogTitle        String?
+  ogDesc         String?
+  ogImage        String?
+  twitterTitle   String?
+  twitterDesc    String?
+  twitterImage   String?
+  schemaType     String?    @default("Article")
+  publishedAt    DateTime?
+  scheduledAt    DateTime?
+  readingTimeMin Int?
+  viewCount      Int        @default(0)
+  authorId       String
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  author         User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  postCategories PostCategory[]
+  images         Image[]
+  postViews      PostView[]
+  auditLogs      PublishAuditLog[]
+
+  @@index([slug])
+  @@index([authorId])
+  @@index([status])
+  @@index([publishedAt])
+  @@index([scheduledAt])
+  @@map("posts")
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  metaTitle   String?
+  metaDesc    String?
+  ogImage     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  postCategories PostCategory[]
+
+  @@index([slug])
+  @@map("categories")
+}
+
+model PostCategory {
+  id         String   @id @default(uuid())
+  postId     String
+  categoryId String
+
+  post     Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, categoryId])
+  @@index([postId])
+  @@index([categoryId])
+  @@map("post_categories")
+}
+
+model Image {
+  id           String    @id @default(uuid())
+  url          String
+  publicId     String
+  altText      String    @default("")
+  caption      String?
+  type         ImageType @default(INLINE)
+  width        Int?
+  height       Int?
+  sizeBytes    Int?
+  mimeType     String?
+  postId       String?
+  uploadedById String
+  createdAt    DateTime  @default(now())
+
+  post       Post? @relation(fields: [postId], references: [id], onDelete: SetNull)
+  uploadedBy User  @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([uploadedById])
+  @@map("images")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  revoked   Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model AffiliateLink {
+  id        String           @id @default(uuid())
+  slug      String           @unique
+  name      String
+  targetUrl String
+  isActive  Boolean          @default(true)
+  clicks    AffiliateClick[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@index([slug])
+  @@index([isActive])
+  @@map("affiliate_links")
+}
+
+model AffiliateClick {
+  id        String        @id @default(uuid())
+  linkId    String
+  referrer  String?
+  ip        String?
+  userAgent String?
+  clickedAt DateTime      @default(now())
+  link      AffiliateLink @relation(fields: [linkId], references: [id], onDelete: Cascade)
+
+  @@index([linkId])
+  @@index([clickedAt])
+  @@map("affiliate_clicks")
+}
+
+model PostView {
+  id         String   @id @default(uuid())
+  postId     String
+  viewerHash String
+  viewedAt   DateTime @default(now())
+  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([viewerHash])
+  @@index([viewedAt])
+  @@index([postId, viewerHash, viewedAt])
+  @@map("post_views")
+}
+
+model PublishAuditLog {
+  id          String    @id @default(uuid())
+  postId      String
+  userId      String
+  action      String
+  fromStatus  String?
+  toStatus    String
+  scheduledAt DateTime?
+  publishedAt DateTime?
+  metadata    Json?
+  durationMs  Int?
+  createdAt   DateTime  @default(now())
+  post        Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("publish_audit_logs")
+}
+
+model SearchQueryLog {
+  id          String   @id @default(uuid())
+  query       String
+  resultCount Int      @default(0)
+  durationMs  Int      @default(0)
+  userId      String?
+  ip          String?
+  createdAt   DateTime @default(now())
+
+  @@index([query])
+  @@index([createdAt])
+  @@map("search_query_logs")
+}
